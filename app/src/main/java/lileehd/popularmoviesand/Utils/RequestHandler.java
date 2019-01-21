@@ -10,13 +10,11 @@ import org.json.JSONObject;
 
 public class RequestHandler {
 
-    private HasVolleyQueue activity;
     public JsonTask task;
 
     private static RequestHandler mInstance;
 
-    public RequestHandler(HasVolleyQueue activity) {
-        this.activity = activity;
+    public RequestHandler() {
         mInstance = this;
     }
 
@@ -24,9 +22,10 @@ public class RequestHandler {
         return mInstance;
     }
 
-    public void create(JsonTask task, String url) {
+    public JsonObjectRequest create(JsonTask task, String url) {
         this.task = task;
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+
+        return new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
@@ -35,12 +34,13 @@ public class RequestHandler {
                     e.printStackTrace();
                 }
             }
+
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
             }
         });
-        this.activity.addToQueue(request);
+
     }
 }

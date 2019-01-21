@@ -1,20 +1,15 @@
 package lileehd.popularmoviesand;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.databinding.DataBindingUtil;
-import androidx.recyclerview.widget.GridLayoutManager;
-import lileehd.popularmoviesand.Adapters.VideoAdapter;
-import lileehd.popularmoviesand.Models.Movie;
-import lileehd.popularmoviesand.Models.Video;
-import lileehd.popularmoviesand.Utils.HasVolleyQueue;
-import lileehd.popularmoviesand.Utils.JsonTask;
-import lileehd.popularmoviesand.Utils.RequestHandler;
-import lileehd.popularmoviesand.databinding.ActivityDetailBinding;
-
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -27,86 +22,206 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class DetailActivity extends AppCompatActivity implements HasVolleyQueue {
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import lileehd.popularmoviesand.Adapters.ReviewAdapter;
+import lileehd.popularmoviesand.Adapters.VideoAdapter;
+import lileehd.popularmoviesand.Data.AppDatabase;
+import lileehd.popularmoviesand.Data.AppExecutors;
+import lileehd.popularmoviesand.Models.Movie;
+import lileehd.popularmoviesand.Models.Review;
+import lileehd.popularmoviesand.Models.Video;
+import lileehd.popularmoviesand.Utils.JsonTask;
+import lileehd.popularmoviesand.Utils.OnItemClickListener;
+import lileehd.popularmoviesand.Utils.RequestHandler;
+import lileehd.popularmoviesand.databinding.ActivityDetailBinding;
+
+public class DetailActivity extends AppCompatActivity implements OnItemClickListener {
     //      TODO: the fav btn
-//    TODO : the trailers and reviews views
+//
 //    TODO: view model
 
     ActivityDetailBinding detailBinding;
     private RequestQueue mRequestQueue;
-    private VideoAdapter mVideoAdapter = new VideoAdapter(DetailActivity.this);
-    private ArrayList<Video>mVideos = new ArrayList<>();
-    boolean mFavBtn;
+    private ArrayList<Video> mVideos = new ArrayList<>();
+    private ArrayList<Review> mReviews = new ArrayList<>();
+    private Movie mMovie;
+    private VideoAdapter mVideoAdapter;
+    private ReviewAdapter mReviewAdapter = new ReviewAdapter(DetailActivity.this);
+    private ImageView posterThumbnail;
+    private TextView title;
+    private TextView releaseDate;
+    private TextView rating;
+    private TextView overview;
+    private RecyclerView trailer;
+    private RecyclerView review;
+    private Button mFavBtn;
+    private AppDatabase db;
+    public boolean movieIsFav;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         detailBinding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
-        new RequestHandler(this);
-        mRequestQueue = Volley.newRequestQueue(this);
+//Views
+        posterThumbnail = detailBinding.moviePosterDetail;
+        title = detailBinding.movieTitle;
+        releaseDate = detailBinding.movieReleaseDate;
+        rating = detailBinding.movieRating;
+        overview = detailBinding.movieOverview;
+        trailer = detailBinding.trailerRecyclerView;
+        review = detailBinding.reviewRecyclerView;
+        mFavBtn = detailBinding.favBtn;
+
+//        Data from MDB
         Intent intent = getIntent();
-        Movie movie = (Movie) intent.getSerializableExtra(getString(R.string.movie_parsing_key));
-        requestVideos("https://api.themoviedb.org/3/movie/" + movie.getId() + "/videos?api_key=e9a4d258ab2f1609f16bd29d0eef3719");
-        setDetailBinding(movie);
-//        favBtnSwitch();
+        mMovie = (Movie) intent.getSerializableExtra(getString(R.string.movie_parsing_key));
+        this.checkMovie(mMovie);
+        setDetailBinding(mMovie);
+        mRequestQueue = Volley.newRequestQueue(this);
+        new RequestHandler();
+        JsonObjectRequest videoRequest = requestVideos(getString(R.string.movie_db_base_url) + mMovie.getId() + getString(R.string.api_label_and_key));
+        mRequestQueue.add(videoRequest);
+
+//        Fav button
+        mFavBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickFavBtn();
+            }
+        });
+
     }
 
+    private void checkMovie(final Movie movie) {
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                db = AppDatabase.getInstance(getApplicationContext());
+                int count = db.favmovieDao().movieCount(movie.getId());
+                movieIsFav = count > 0;
+                DetailActivity.this.favBtn();
+            }
+        });
+    }
+
+
     private void setDetailBinding(Movie movie) {
+// movie detail
         Picasso.with(this)
-                .load(movie.getPosterPath())
+                .load(Movie.IMG_BASE_URL+ movie.getPosterPath())
                 .placeholder(R.drawable.ic_launcher_background)
                 .error(R.drawable.ic_launcher_background)
                 .fit()
                 .centerInside()
-                .into(detailBinding.moviePosterDetail);
-        detailBinding.movieTitle.setText(movie.getTitle());
-        detailBinding.movieReleaseDate.setText(movie.getReleaseDate());
-        detailBinding.movieRating.setText(String.format(getString(R.string.from_10), String.valueOf(movie.getRating())));
-        detailBinding.movieOverview.setText(movie.getOverview());
+                .into(posterThumbnail);
+        title.setText(movie.getTitle());
+        releaseDate.setText(movie.getReleaseDate());
+        rating.setText(String.format(getString(R.string.from_10), String.valueOf(movie.getRating())));
+        overview.setText(movie.getOverview());
 
 // videos
-        detailBinding.trailerRecyclerView.setHasFixedSize(true);
-        if(DetailActivity.this.getResources().getConfiguration()
-                .orientation == Configuration.ORIENTATION_PORTRAIT){
-            detailBinding.trailerRecyclerView
-                    .setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
-        }else{
-            detailBinding.trailerRecyclerView
-                    .setLayoutManager(new GridLayoutManager(getApplicationContext(),4));
+        trailer.setHasFixedSize(true);
+        if (DetailActivity.this.getResources().getConfiguration()
+                .orientation == Configuration.ORIENTATION_PORTRAIT) {
+            trailer.setLayoutManager(new GridLayoutManager(getApplicationContext(), 1));
+        } else {
+            trailer.setLayoutManager(new GridLayoutManager(getApplicationContext(), 1));
         }
-//        mVideoAdapter.setmVideoList(this.mVideos);
-//        detailBinding.trailerRecyclerView.setAdapter(mVideoAdapter);
 
+//  reviews
+        review.setHasFixedSize(true);
+        if (DetailActivity.this.getResources().getConfiguration()
+                .orientation == Configuration.ORIENTATION_PORTRAIT) {
+            review.setLayoutManager(new GridLayoutManager(getApplicationContext(), 1));
+        } else {
+            review.setLayoutManager(new GridLayoutManager(getApplicationContext(), 1));
+        }
     }
-    public void requestVideos(String url) {
+
+    public JsonObjectRequest requestVideos(String videoUrl) {
         JsonTask task = new JsonTask() {
             @Override
             public void handle(JSONObject json) throws JSONException {
+                mVideoAdapter = new VideoAdapter(DetailActivity.this);
                 JSONArray results = json.getJSONArray("results");
+                mVideos.clear();
                 for (int i = 0; i < results.length(); i++) {
                     JSONObject videoInfo = results.getJSONObject(i);
                     Video video = new Video(videoInfo);
-                    mVideos.add(video);
-                    Log.v("VIDEO INFO", video.getName());
+                    mVideos.add(i, video);
+                    Log.v("VIDEO INFO", video.getKey());
+                    requestReviews(getString(R.string.movie_db_base_url) + mMovie.getId() + getString(R.string.api_label_review__key));
                 }
+                trailer.setAdapter(mVideoAdapter);
                 mVideoAdapter.setmVideoList(mVideos);
-                detailBinding.trailerRecyclerView.setAdapter(mVideoAdapter);
-
+                mVideoAdapter.setOnItemClickListener(DetailActivity.this);
             }
         };
-        RequestHandler.getInstance().create(task, url);
+        return RequestHandler.getInstance().create(task, videoUrl);
     }
 
-    @Override
-    public void addToQueue(JsonObjectRequest request) {
+    private void requestReviews(String reviewUrl) {
+        JsonTask taskR = new JsonTask() {
+            @Override
+            public void handle(JSONObject json) throws JSONException {
+                mReviewAdapter = new ReviewAdapter(DetailActivity.this);
+                JSONArray results = json.getJSONArray("results");
+                mReviews.clear();
+                for (int i = 0; i < results.length(); i++) {
+                    JSONObject reviewInfo = results.getJSONObject(i);
+                    Review review = new Review(reviewInfo);
+                    mReviews.add(i, review);
+                    Log.v("REVIEW INFO", review.getmUrl());
+                }
+                review.setAdapter(mReviewAdapter);
+                mReviewAdapter.setmReviewList(mReviews);
+                mReviewAdapter.setOnItemClickListener(DetailActivity.this);
+            }
+        };
+        JsonObjectRequest request = RequestHandler.getInstance().create(taskR, reviewUrl);
         mRequestQueue.add(request);
     }
 
-//    private void favBtnSwitch(){
-//        if(mFavBtn){
-//            detailBinding.favBtn.setText("Delete from favz");
-//        }else
-//            detailBinding.favBtn.setText(R.string.button_fav);
-//    }
+    private void favBtn() {
+        String btnLabel = movieIsFav ? "Remove from fav" :"Add to fav";
+        mFavBtn.setText(btnLabel);
+    }
+
+    @Override
+    public void onVideoClick(int position) {
+        Video videoClicked = mVideoAdapter.getVideoFrom(position);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(videoClicked.getKey()));
+        startActivity(intent);
+    }
+
+    @Override
+    public void onReviewClick(int position) {
+        Review reviewClicked = mReviewAdapter.getReviewFrom(position);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse((reviewClicked.getmUrl())));
+        startActivity(intent);
+    }
+
+    @Override
+    public void onClickFavBtn() {
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                db = AppDatabase.getInstance(getApplicationContext());
+                if (DetailActivity.this.movieIsFav) {
+                    db.favmovieDao().delete(mMovie);
+                } else {
+                    db.favmovieDao().insert(mMovie);
+                }
+                DetailActivity.this.movieIsFav = !DetailActivity.this.movieIsFav;
+            }
+        });
+
+        String message = movieIsFav ? "deleted" : "added";
+        Toast.makeText(DetailActivity.this, message, Toast.LENGTH_LONG).show();
+        this.favBtn();
+    }
 
 }

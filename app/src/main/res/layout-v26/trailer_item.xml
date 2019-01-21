@@ -34,6 +34,7 @@
         app:layout_constraintEnd_toStartOf="@+id/videoTitleView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/videoTitleView"
-        app:srcCompat="@drawable/play_circle_outline" />
+        app:srcCompat="@drawable/play_circle_outline"
+        android:contentDescription="@string/play_pic" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,104 +1,83 @@
 package lileehd.popularmoviesand.Models;
 
-import android.util.Log;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
-import lileehd.popularmoviesand.Adapters.VideoAdapter;
-import lileehd.popularmoviesand.Utils.JsonTask;
-import lileehd.popularmoviesand.Utils.RequestHandler;
-import lileehd.popularmoviesand.databinding.ActivityDetailBinding;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
-//@Entity(tableName = "movieTable")
+
+@Entity(tableName = "movies")
 public class Movie implements Serializable {
-    //    @PrimaryKey(autoGenerate = true)
-    private int mId;
-    private String mTitle;
-    private String mPosterPath;
-    private String mReleaseDate;
-    private int mRating;
-    private ArrayList<Video> mVideos = new ArrayList<>();
-//    VideoAdapter mVideoAdapter;
-//    ActivityDetailBinding activityDetailBinding;
-    //    TODO proper datatype for the rating
-    private String mOverview;
-    private String IMG_BASE_URL = "https://image.tmdb.org/t/p/w500";
+    @PrimaryKey(autoGenerate = true)
+    private int id;
+    private String title;
+    private String posterPath;
+    private String releaseDate;
+    private int rating;
+    private String overview;
 
-    public Movie(JSONObject info) throws JSONException {
-        this.mId = info.getInt("id");
-        this.mPosterPath = info.getString("poster_path");
-        this.mTitle = info.getString("title");
-        this.mReleaseDate = info.getString("release_date");
-        this.mRating = info.getInt("vote_average");
-        this.mOverview = info.getString("overview");
-//        this.mVideos = requestVideos("https://api.themoviedb.org/3/movie/" + this.mId + "/videos?api_key=e9a4d258ab2f1609f16bd29d0eef3719");
+    public static String IMG_BASE_URL = "https://image.tmdb.org/t/p/w500";
+
+    public void jsonHydrate(JSONObject info) throws JSONException {
+        this.id = info.getInt("id");
+        this.posterPath = info.getString("poster_path");
+        this.title = info.getString("title");
+        this.releaseDate = info.getString("release_date");
+        this.rating = info.getInt("vote_average");
+        this.overview = info.getString("overview");
+    }
+
+    public void setId(int mId) {
+        this.id = mId;
+    }
+
+    public void setTitle(String mTitle) {
+        this.title = mTitle;
+    }
+
+    public void setPosterPath(String mPosterPath) {
+        this.posterPath = mPosterPath;
+    }
+
+    public void setReleaseDate(String mReleaseDate) {
+        this.releaseDate = mReleaseDate;
+    }
+
+    public void setRating(int mRating) {
+        this.rating = mRating;
+    }
+
+    public void setOverview(String mOverview) {
+        this.overview = mOverview;
     }
 
     public int getId() {
-        return mId;
+        return id;
     }
 
     public String getTitle() {
-        return mTitle;
+        return title;
     }
 
     public String getPosterPath() {
-        return IMG_BASE_URL + mPosterPath;
+        return posterPath;
     }
 
     public String getReleaseDate() {
-        return mReleaseDate;
+        return releaseDate;
     }
 
     public int getRating() {
-        return mRating;
+        return rating;
     }
 
     public String getOverview() {
-        return mOverview;
+        return overview;
     }
 
-    public ArrayList<Video> getmVideos() {
-        return mVideos;
-    }
 
-//    public ArrayList<Video> requestVideos(String url) {
-//        JsonTask task = new JsonTask() {
-//            @Override
-//            public void handle(JSONObject json) throws JSONException {
-//                JSONArray results = json.getJSONArray("results");
-//                for (int i = 0; i < results.length(); i++) {
-//                    JSONObject videoInfo = results.getJSONObject(i);
-//                    Video video = new Video(videoInfo);
-//                    mVideos.add(video);
-//                    Log.v("VIDEO INFO", video.getName());
-//                }
-//            }
-//        };
-//        RequestHandler.getInstance().create(task, url);
-//        return mVideos;
-//    }
-
-
-    //    public void requestReviews(String url) {
-//        JsonTask task = new JsonTask() {
-//            @Override
-//            public void handle(JSONObject json) throws JSONException {
-//                JSONArray results = json.getJSONArray("results");
-//                for (int i = 0; i < results.length(); i++) {
-//                    JSONObject reviewInfo = results.getJSONObject(i);
-//                    Review review = new Review(reviewInfo);
-//                    mVideos.add(video);
-//                    Log.v("REVIEW INFO", review.getName());
-//                }
-//            }
-//        };
-//        RequestHandler.getInstance().create(task, url);
-//    }
 
 }

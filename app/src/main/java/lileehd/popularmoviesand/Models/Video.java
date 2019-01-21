@@ -9,7 +9,7 @@ public class Video implements Serializable {
     private String mId;
     private String mKey;
     private String mName;
-    private String VIDEO_BASE_URL ="https://www.youtube.com/watch?v=";
+    private String VIDEO_BASE_URL = "https://www.youtube.com/watch?v=";
 
     public Video(JSONObject videoInfo) throws JSONException {
         this.mId = videoInfo.getString("id");

@@ -1,16 +1,5 @@
 package lileehd.popularmoviesand;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.databinding.DataBindingUtil;
-import androidx.recyclerview.widget.GridLayoutManager;
-import lileehd.popularmoviesand.Adapters.MovieAdapter;
-import lileehd.popularmoviesand.Models.Movie;
-import lileehd.popularmoviesand.Utils.HasVolleyQueue;
-import lileehd.popularmoviesand.Utils.JsonTask;
-import lileehd.popularmoviesand.Utils.MovieDbUrlBuilder;
-import lileehd.popularmoviesand.Utils.RequestHandler;
-import lileehd.popularmoviesand.databinding.ActivityMainBinding;
-
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -18,7 +7,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -29,50 +17,60 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements HasVolleyQueue, MovieAdapter.OnItemClickListener {
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import lileehd.popularmoviesand.Adapters.MovieAdapter;
+import lileehd.popularmoviesand.Data.AppDatabase;
+import lileehd.popularmoviesand.Models.Movie;
+import lileehd.popularmoviesand.Utils.JsonTask;
+import lileehd.popularmoviesand.Utils.MovieDbUrlBuilder;
+import lileehd.popularmoviesand.Utils.MovieViewModel;
+import lileehd.popularmoviesand.Utils.RequestHandler;
+import lileehd.popularmoviesand.databinding.ActivityMainBinding;
+
+public class MainActivity extends AppCompatActivity implements MovieAdapter.OnItemClickListener {
 
     private RequestQueue mRequestQueue;
     private ArrayList<Movie> mMovies = new ArrayList<>();
     private MovieAdapter mMovieAdapter;
     ActivityMainBinding mainBinding;
     protected MovieDbUrlBuilder movieDbURLBuilder;
+    private RecyclerView mRecyclerView;
+    private AppDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-
-        new RequestHandler(this);
+        mRecyclerView = mainBinding.recyclerView;
+        new RequestHandler();
         mRequestQueue = Volley.newRequestQueue(this);
         movieDbURLBuilder = new MovieDbUrlBuilder();
+        setupViewModel();
         requestMovies(movieDbURLBuilder.sortBy("popular").getUrl());
         setMainBinding();
+
+        mDb = AppDatabase.getInstance(getApplicationContext());
+
     }
     private void setMainBinding() {
-        mainBinding.recyclerView.setHasFixedSize(true);
+        mRecyclerView.setHasFixedSize(true);
         if (MainActivity.this.getResources().getConfiguration()
                 .orientation == Configuration.ORIENTATION_PORTRAIT) {
-            mainBinding.recyclerView
+            mRecyclerView
                     .setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
         } else {
-            mainBinding.recyclerView
+            mRecyclerView
                     .setLayoutManager(new GridLayoutManager(getApplicationContext(), 4));
         }
     }
-
-    @Override
-    public void addToQueue(JsonObjectRequest request) {
-        mRequestQueue.add(request);
-    }
-
-//    public void addMovie(Movie movie) {
-//        this.mMovies.add(movie);
-//    }
-//
-//    public ArrayList<Movie> getMovies() {
-//        return this.mMovies;
-//    }
 
     public void requestMovies(String url) {
         JsonTask task = new JsonTask() {
@@ -83,16 +81,20 @@ public class MainActivity extends AppCompatActivity implements HasVolleyQueue, M
                 mMovies.clear();
                 for (int i = 0; i < results.length(); i++) {
                     JSONObject movieInfo = results.getJSONObject(i);
-                    Movie movie = new Movie(movieInfo);
+                    Movie movie = new Movie();
+                    movie.jsonHydrate(movieInfo);
+//                    .setExtras()
                     mMovies.add(movie);
-                    Log.v("MOVIE INFO", movie.getTitle());
+                    Log.v("MOVIE INFO", String.valueOf(movie.getId()));
                 }
-                mMovieAdapter.setmMovieList(mMovies);
+                mRecyclerView.setAdapter(mMovieAdapter);
+                mMovieAdapter.setMovieList(mMovies);
                 mMovieAdapter.setOnItemClickListener(MainActivity.this);
-                mainBinding.recyclerView.setAdapter(mMovieAdapter);
+
             }
         };
-        RequestHandler.getInstance().create(task, url);
+        JsonObjectRequest request = RequestHandler.getInstance().create(task, url);
+        mRequestQueue.add(request);
     }
     @Override
     public void onItemClick(int position) {
@@ -101,6 +103,18 @@ public class MainActivity extends AppCompatActivity implements HasVolleyQueue, M
         intent.putExtra(getString(R.string.movie_parsing_key), movieClicked);
         startActivity(intent);
     }
+//    Favorites
+    private void setupViewModel(){
+        MovieViewModel viewModel = ViewModelProviders.of(this).get(MovieViewModel.class);
+        viewModel.getAllFavs().observe(this, new Observer<List<Movie>>() {
+            @Override
+            public void onChanged(@Nullable List<Movie> favMovies) {
+                Log.v("FAVORITES", "Updating favorite list from LiveData to ViewModel");
+                MainActivity.this.mMovieAdapter.setmFavList(favMovies);
+            }
+        });
+    }
+//    Menu
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -114,7 +128,6 @@ public class MainActivity extends AppCompatActivity implements HasVolleyQueue, M
         Log.v("SORTBY", sort);
         Log.v("SORTBY", url);
         requestMovies(url);
-        Toast.makeText(getApplicationContext(), sort, Toast.LENGTH_LONG).show();
         return true;
     }
 
@@ -127,10 +140,10 @@ public class MainActivity extends AppCompatActivity implements HasVolleyQueue, M
             case R.id.top_rated:
                 setTitle(R.string.top_rated);
                 return this.sortBy(getString(R.string.top_rated_key));
-//                TODO: Favorites
             case R.id.favorites:
                 setTitle(R.string.favorites_db);
-                return this.sortBy(getString(R.string.favorites_db));
+                setupViewModel();
+                return true;
             default:
         }
         return super.onOptionsItemSelected(item);

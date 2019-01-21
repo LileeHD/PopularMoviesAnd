@@ -31,8 +31,8 @@
 
             <ImageView
                 android:id="@+id/moviePosterDetail"
-                android:layout_width="175dp"
-                android:layout_height="267dp"
+                android:layout_width="146dp"
+                android:layout_height="221dp"
                 android:layout_marginStart="@dimen/sixteen_dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="@dimen/eight_dp"
@@ -46,12 +46,10 @@
                 android:id="@+id/movieReleaseDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="@dimen/sixteen_dp"
-                android:layout_marginEnd="@dimen/thirty_six_dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="32dp"
                 android:text=""
                 android:textSize="25sp"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/moviePosterDetail"
                 app:layout_constraintTop_toBottomOf="@+id/movieTitle"
                 tools:text="@string/release_date_hint" />
@@ -84,38 +82,39 @@
 
             <TextView
                 android:id="@+id/movieOverview"
-                android:layout_width="0dp"
+                android:layout_width="353dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:padding="@dimen/sixteen_dp"
                 android:text=""
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/moviePosterDetail"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toEndOf="@+id/movieReleaseDate"
+                app:layout_constraintTop_toBottomOf="@+id/movieTitle"
                 tools:text="@string/overview_hint" />
 
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/trailerRecyclerView"
-                android:layout_width="match_parent"
+                android:layout_width="274dp"
+                android:layout_height="match_parent"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:visibility="visible"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/moviePosterDetail"
+                tools:listitem="@layout/trailer_item" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/reviewRecyclerView"
+                android:layout_width="409dp"
                 android:layout_height="match_parent"
                 android:layout_marginTop="8dp"
                 android:gravity="center"
                 android:visibility="visible"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/movieOverview"
-                tools:listitem="@layout/trailer_item" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/reviewRecyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:visibility="visible"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/trailerRecyclerView"
+                app:layout_constraintTop_toBottomOf="@+id/moviePosterDetail"
                 tools:listitem="@layout/review_item" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

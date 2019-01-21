@@ -7,7 +7,7 @@
     <!--Menus-->
     <string name="most_popular">Most popular</string>
     <string name="top_rated">Top rated</string>
-    <string name="favorites_db">favorites</string>
+    <string name="favorites_db">Favorites</string>
 
     <!--json keys and urls-->
     <string name="movie_db_url" translatable="false">https://api.themoviedb.org/3/movie/[SORTED]?api_key=[API_KEY]</string>
@@ -36,7 +36,9 @@
 
 
     <string name="image_view_description">Movie poster</string>
-    <string name="overview_hint">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</string>
+    <string name="overview_hint">Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+        Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown
+        printer took a galley of type and scrambled it to make a type specimen book.</string>
     <string name="rating_hint">8.1/10</string>
     <string name="release_date_hint">2018 12 17</string>
     <string name="title_hint">Movie Title</string>
@@ -45,5 +47,10 @@
     <string name="trailer_thumbnail">trailer thumbnail</string>
     <string name="trailers">Trailers:</string>
     <string name="divider">divider</string>
+    <string name="movie_db_base_url">https://api.themoviedb.org/3/movie/</string>
+    <string name="api_label_and_key">/videos?api_key=e9a4d258ab2f1609f16bd29d0eef3719</string>
+    <string name="api_label_review__key">/reviews?api_key=e9a4d258ab2f1609f16bd29d0eef3719</string>
+    <string name="play_pic">play_pic</string>
+    <string name="read_more">Read more</string>
 
 </resources>

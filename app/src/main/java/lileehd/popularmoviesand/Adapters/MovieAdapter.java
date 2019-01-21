@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,6 +20,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.PosterViewHo
     private Context mContext;
     private ArrayList<Movie> mMovieList;
     private OnItemClickListener mListener;
+    private List<Movie> mFavMovies;
 
     public MovieAdapter(Context mContext) {
         this.mContext = mContext;
@@ -28,12 +30,17 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.PosterViewHo
         mListener = listener;
     }
 
-    public void setmMovieList(ArrayList<Movie> movies) {
+    public void setMovieList(ArrayList<Movie> movies) {
         this.mMovieList= movies;
     }
 
     public Movie getMovieFrom(int position) {
         return this.mMovieList.get(position);
+    }
+
+    public void setmFavList(List<Movie>favMovies) {
+        mFavMovies= favMovies;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -46,7 +53,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.PosterViewHo
     @Override
     public void onBindViewHolder(@NonNull PosterViewHolder posterViewHolder, int i) {
         Movie currentMovie = mMovieList.get(i);
-        String posterUrl = currentMovie.getPosterPath();
+        String posterUrl = Movie.IMG_BASE_URL + currentMovie.getPosterPath();
         Picasso.with(mContext)
                 .load(posterUrl)
                 .placeholder(R.drawable.ic_launcher_background)
@@ -58,6 +65,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.PosterViewHo
     public int getItemCount() {
         return mMovieList.size();
     }
+
+
 
     public interface OnItemClickListener {
 

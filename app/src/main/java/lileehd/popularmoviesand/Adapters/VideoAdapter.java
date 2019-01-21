@@ -12,15 +12,15 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import lileehd.popularmoviesand.Models.Video;
 import lileehd.popularmoviesand.R;
+import lileehd.popularmoviesand.Utils.OnItemClickListener;
 
 public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHolder> {
     private Context mContext;
     private ArrayList<Video> mVideoList;
     private OnItemClickListener mListener;
 
-
-    public VideoAdapter(Context mContext) {
-        this.mContext = mContext;
+    public VideoAdapter(Context context) {
+        this.mContext = context;
     }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
@@ -28,10 +28,10 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
     }
 
     public void setmVideoList(ArrayList<Video> videos) {
-        this.mVideoList = videos;
+        mVideoList = videos;
     }
 
-    public Video getVideoFrom(int position) {
+    public Video getVideoFrom(int position){
         return this.mVideoList.get(position);
     }
 
@@ -47,16 +47,11 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         Video currentVideo = mVideoList.get(position);
         String videoUrl = currentVideo.getKey();
         holder.mVideoView.setText(currentVideo.getName());
-
     }
 
     @Override
     public int getItemCount() {
         return mVideoList.size();
-    }
-
-    public interface OnItemClickListener {
-        void onItemClick(int position);
     }
 
     public class VideoViewHolder extends RecyclerView.ViewHolder {
@@ -68,15 +63,15 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mListener != null) {
+                    if(mListener != null){
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
-                            mListener.onItemClick(position);
+                            mListener.onVideoClick(position);
                         }
                     }
                 }
             });
-
         }
     }
+
 }
