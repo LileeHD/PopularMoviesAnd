@@ -32,7 +32,7 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
         mReviewList = reviews;
     }
 
-    public Review getReviewFrom(int position){
+    public Review getReviewFrom(int position) {
         return this.mReviewList.get(position);
     }
 
@@ -46,7 +46,6 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
     @Override
     public void onBindViewHolder(@NonNull ReviewViewHolder holder, int position) {
         Review currentReview = mReviewList.get(position);
-        String reviewUrl = currentReview.getmUrl();
         holder.mAuthor.setText(currentReview.getmAuthor());
         holder.mContent.setText((currentReview.getmContent()));
     }

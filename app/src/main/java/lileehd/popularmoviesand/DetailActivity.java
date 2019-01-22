@@ -24,6 +24,7 @@ import java.util.ArrayList;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import lileehd.popularmoviesand.Adapters.ReviewAdapter;
@@ -34,6 +35,7 @@ import lileehd.popularmoviesand.Models.Movie;
 import lileehd.popularmoviesand.Models.Review;
 import lileehd.popularmoviesand.Models.Video;
 import lileehd.popularmoviesand.Utils.JsonTask;
+import lileehd.popularmoviesand.Utils.MovieViewModel;
 import lileehd.popularmoviesand.Utils.OnItemClickListener;
 import lileehd.popularmoviesand.Utils.RequestHandler;
 import lileehd.popularmoviesand.databinding.ActivityDetailBinding;
@@ -111,7 +113,7 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
     private void setDetailBinding(Movie movie) {
 // movie detail
         Picasso.with(this)
-                .load(Movie.IMG_BASE_URL+ movie.getPosterPath())
+                .load(Movie.IMG_BASE_URL + movie.getPosterPath())
                 .placeholder(R.drawable.ic_launcher_background)
                 .error(R.drawable.ic_launcher_background)
                 .fit()
@@ -186,7 +188,7 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
     }
 
     private void favBtn() {
-        String btnLabel = movieIsFav ? "Remove from fav" :"Add to fav";
+        String btnLabel = movieIsFav ? "Remove from fav" : "Add to fav";
         mFavBtn.setText(btnLabel);
     }
 
@@ -209,7 +211,7 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                db = AppDatabase.getInstance(getApplicationContext());
+                db = AppDatabase.getInstance(getApplication());
                 if (DetailActivity.this.movieIsFav) {
                     db.favmovieDao().delete(mMovie);
                 } else {

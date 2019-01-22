@@ -10,6 +10,7 @@
     <string name="favorites_db">Favorites</string>
 
     <!--json keys and urls-->
+    <!--<string name="movie_db_url" translatable="false">https://api.themoviedb.org/3/movie/[SORTED]?api_key=[API_KEY]</string>-->
     <string name="movie_db_url" translatable="false">https://api.themoviedb.org/3/movie/[SORTED]?api_key=[API_KEY]</string>
     <string name="image_base_url" translatable="false">https://image.tmdb.org/t/p/w500</string>
 
@@ -33,6 +34,7 @@
     <string name="from_10" translatable="false"> %s/10</string>
     <string name="sorted_target" translatable="false">[SORTED]</string>
     <string name="api_key_target" translatable="false">[API_KEY]</string>
+    <!--<string name="key_label" translatable="false">?api_key=</string>-->
 
 
     <string name="image_view_description">Movie poster</string>
@@ -52,5 +54,6 @@
     <string name="api_label_review__key">/reviews?api_key=e9a4d258ab2f1609f16bd29d0eef3719</string>
     <string name="play_pic">play_pic</string>
     <string name="read_more">Read more</string>
+    <string name="pref_sort_key">sort_order</string>
 
 </resources>

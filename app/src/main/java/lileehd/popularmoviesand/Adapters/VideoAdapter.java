@@ -31,7 +31,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         mVideoList = videos;
     }
 
-    public Video getVideoFrom(int position){
+    public Video getVideoFrom(int position) {
         return this.mVideoList.get(position);
     }
 
@@ -45,7 +45,6 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
     @Override
     public void onBindViewHolder(@NonNull VideoViewHolder holder, int position) {
         Video currentVideo = mVideoList.get(position);
-        String videoUrl = currentVideo.getKey();
         holder.mVideoView.setText(currentVideo.getName());
     }
 
@@ -63,7 +62,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(mListener != null){
+                    if (mListener != null) {
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
                             mListener.onVideoClick(position);

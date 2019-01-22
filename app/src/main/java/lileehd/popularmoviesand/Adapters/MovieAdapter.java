@@ -18,9 +18,8 @@ import lileehd.popularmoviesand.R;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.PosterViewHolder> {
     private Context mContext;
-    private ArrayList<Movie> mMovieList;
+    private ArrayList<Movie> mMovieList = new ArrayList<>();
     private OnItemClickListener mListener;
-    private List<Movie> mFavMovies;
 
     public MovieAdapter(Context mContext) {
         this.mContext = mContext;
@@ -31,16 +30,12 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.PosterViewHo
     }
 
     public void setMovieList(ArrayList<Movie> movies) {
-        this.mMovieList= movies;
+        this.mMovieList = movies;
+        this.notifyDataSetChanged();
     }
 
     public Movie getMovieFrom(int position) {
         return this.mMovieList.get(position);
-    }
-
-    public void setmFavList(List<Movie>favMovies) {
-        mFavMovies= favMovies;
-        notifyDataSetChanged();
     }
 
     @NonNull
@@ -63,10 +58,12 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.PosterViewHo
 
     @Override
     public int getItemCount() {
-        return mMovieList.size();
+        if (mMovieList != null && mMovieList.size() > 0) {
+            return mMovieList.size();
+        } else {
+            return 0;
+        }
     }
-
-
 
     public interface OnItemClickListener {
 

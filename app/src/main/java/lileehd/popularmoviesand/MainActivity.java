@@ -3,6 +3,7 @@ package lileehd.popularmoviesand;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,12 +17,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -43,40 +46,60 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
     ActivityMainBinding mainBinding;
     protected MovieDbUrlBuilder movieDbURLBuilder;
     private RecyclerView mRecyclerView;
+    private Movie mMovie;
     private AppDatabase mDb;
+    public static String LIST_STATE = "list_state";
+    private Serializable savedRecyclerLayoutState;
+    public static final String BUNDLE_RECYCLER_LAYOUT ="recycler-layout";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if(savedInstanceState != null){
+            mMovie = (Movie) savedInstanceState.getSerializable("movie");
+            savedRecyclerLayoutState = savedInstanceState.getSerializable(BUNDLE_RECYCLER_LAYOUT);
+            setMainBinding();
+        }
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-        mRecyclerView = mainBinding.recyclerView;
+//        setMainBinding();
         new RequestHandler();
         mRequestQueue = Volley.newRequestQueue(this);
         movieDbURLBuilder = new MovieDbUrlBuilder();
-        setupViewModel();
         requestMovies(movieDbURLBuilder.sortBy("popular").getUrl());
-        setMainBinding();
 
         mDb = AppDatabase.getInstance(getApplicationContext());
-
     }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable("movie", mMovie);
+        outState.putSerializable(BUNDLE_RECYCLER_LAYOUT, (Serializable) Objects.requireNonNull(mRecyclerView.getLayoutManager()).onSaveInstanceState());
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState, PersistableBundle persistentState) {
+        super.onRestoreInstanceState(savedInstanceState, persistentState);
+        mMovies = (ArrayList<Movie>) savedInstanceState.getSerializable(LIST_STATE);
+        savedRecyclerLayoutState = savedInstanceState.getSerializable(BUNDLE_RECYCLER_LAYOUT);
+    }
+
     private void setMainBinding() {
+        mMovieAdapter = new MovieAdapter(MainActivity.this);
+        mRecyclerView = mainBinding.recyclerView;
         mRecyclerView.setHasFixedSize(true);
-        if (MainActivity.this.getResources().getConfiguration()
-                .orientation == Configuration.ORIENTATION_PORTRAIT) {
-            mRecyclerView
-                    .setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
+        if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            mRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
         } else {
-            mRecyclerView
-                    .setLayoutManager(new GridLayoutManager(getApplicationContext(), 4));
+            mRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 4));
         }
+
     }
 
     public void requestMovies(String url) {
         JsonTask task = new JsonTask() {
             @Override
             public void handle(JSONObject json) throws JSONException {
-                mMovieAdapter = new MovieAdapter(MainActivity.this);
                 JSONArray results = json.getJSONArray("results");
                 mMovies.clear();
                 for (int i = 0; i < results.length(); i++) {
@@ -96,6 +119,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
         JsonObjectRequest request = RequestHandler.getInstance().create(task, url);
         mRequestQueue.add(request);
     }
+
     @Override
     public void onItemClick(int position) {
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
@@ -103,19 +127,21 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
         intent.putExtra(getString(R.string.movie_parsing_key), movieClicked);
         startActivity(intent);
     }
-//    Favorites
-    private void setupViewModel(){
+
+    //    Favorites
+    private void setupViewModel() {
         MovieViewModel viewModel = ViewModelProviders.of(this).get(MovieViewModel.class);
         viewModel.getAllFavs().observe(this, new Observer<List<Movie>>() {
             @Override
-            public void onChanged(@Nullable List<Movie> favMovies) {
-                Log.v("FAVORITES", "Updating favorite list from LiveData to ViewModel");
-                MainActivity.this.mMovieAdapter.setmFavList(favMovies);
+            public void onChanged(List<Movie> favMovies) {
+                mMovieAdapter.setMovieList((ArrayList<Movie>) favMovies);
+                mRecyclerView.setAdapter(mMovieAdapter);
+                mMovieAdapter.notifyDataSetChanged();
             }
         });
     }
-//    Menu
 
+    //    Menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
@@ -143,9 +169,14 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
             case R.id.favorites:
                 setTitle(R.string.favorites_db);
                 setupViewModel();
-                return true;
             default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
+
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
     }
 }

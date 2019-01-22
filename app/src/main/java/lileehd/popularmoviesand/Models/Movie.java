@@ -4,6 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -77,7 +78,6 @@ public class Movie implements Serializable {
     public String getOverview() {
         return overview;
     }
-
 
 
 }
