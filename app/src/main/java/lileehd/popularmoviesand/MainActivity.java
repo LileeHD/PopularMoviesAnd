@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
         movieDbURLBuilder = new MovieDbUrlBuilder();
 
         if (savedInstanceState != null) {
-            mMovies = savedInstanceState.getParcelableArrayList("SAVE_INSTANCE");
+            mMovies = savedInstanceState.getParcelableArrayList("movies");
             mMovieAdapter.setMovieList(mMovies);
             mMovieAdapter.notifyDataSetChanged();
         } else {
