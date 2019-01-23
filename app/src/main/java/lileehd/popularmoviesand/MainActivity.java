@@ -39,11 +39,16 @@ import lileehd.popularmoviesand.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity implements MovieAdapter.OnItemClickListener {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
+    public static final String SAVE_ALL_MOVIES_LIST = "ALL_MOVIES_LIST";
+    public static final String SAVE_MOVIE_FILTER_SORT = "MOVIE_FILTER_SORT";
+    private Parcelable currentList;
+
     private RequestQueue mRequestQueue;
-    private ArrayList<Movie> mMovies = new ArrayList<>();
+    private ArrayList<Movie> mMovies;
     private List<Movie> mFavMovies;
     private MovieAdapter mMovieAdapter;
-//    private MovieAdapter mFavAdapter;
+    //    private MovieAdapter mFavAdapter;
     ActivityMainBinding mainBinding;
     protected MovieDbUrlBuilder movieDbURLBuilder;
     private RecyclerView mRecyclerView;
@@ -57,43 +62,54 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+
         mMovieAdapter = new MovieAdapter(MainActivity.this);
-        mDb = AppDatabase.getInstance(getApplicationContext());
+
+        mRecyclerView = mainBinding.recyclerView;
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setAdapter(mMovieAdapter);
+        if (MainActivity.this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            mRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
+        } else {
+            mRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 4));
+        }
+        mMovieAdapter.notifyDataSetChanged();
+        Log.v("setMainBinding", "is displayed");
+        AppDatabase mDb = AppDatabase.getInstance(getApplicationContext());
         new RequestHandler();
-        setMainBinding();
         mRequestQueue = Volley.newRequestQueue(this);
         movieDbURLBuilder = new MovieDbUrlBuilder();
-        requestMovies(movieDbURLBuilder.sortBy("popular").getUrl());
-        setupViewModel();
+//        requestMovies(movieDbURLBuilder.sortBy("popular").getUrl());
+
+        if (savedInstanceState != null) {
+            mMovies = savedInstanceState.getParcelableArrayList("SAVE_INSTANCE");
+        }else {
+
+        }
+//        setupViewModel();
+
     }
+
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        if(recyclerViewState == null){
+//            requestMovies(movieDbURLBuilder.sortBy("popular").getUrl());
+//        }
+//    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelable("movie", mMovie);
+        outState.putParcelableArrayList("SAVE_INSTANCE", mMovies);
         Log.v("INSTANCE_STATE", "save");
+        super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         Log.v("INSTANCE_STATE", "restore");
-        mMovie = savedInstanceState.getParcelable("movie");
-//        mRecyclerView = savedInstanceState.getParcelable("view");
-
-    }
-
-    private void setMainBinding() {
-        mRecyclerView = mainBinding.recyclerView;
-        mRecyclerView.setHasFixedSize(true);
-        if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            mRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
-        } else {
-            mRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 4));
-        }
-        mRecyclerView.setAdapter(mMovieAdapter);
-        mMovieAdapter.notifyDataSetChanged();
-
+        mMovies = savedInstanceState.getParcelableArrayList("movies");
     }
 
     public void requestMovies(String url) {

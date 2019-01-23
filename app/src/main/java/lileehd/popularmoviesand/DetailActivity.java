@@ -75,7 +75,7 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
         review = detailBinding.reviewRecyclerView;
         mFavBtn = detailBinding.favBtn;
 
-//        Data from MDB
+//        Data from MDB api
         Intent intent = getIntent();
         mMovie = (Movie) intent.getParcelableExtra(getString(R.string.movie_parsing_key));
         this.checkMovie(mMovie);
@@ -174,7 +174,6 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
                     JSONObject reviewInfo = results.getJSONObject(i);
                     Review review = new Review(reviewInfo);
                     mReviews.add(i, review);
-                    Log.v("REVIEW INFO", review.getmUrl());
                 }
                 review.setAdapter(mReviewAdapter);
                 mReviewAdapter.setmReviewList(mReviews);
@@ -188,6 +187,7 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
     private void favBtn() {
         String btnLabel = movieIsFav ? "Remove from fav" : "Add to fav";
         mFavBtn.setText(btnLabel);
+
     }
 
     @Override
@@ -212,10 +212,13 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
                 db = AppDatabase.getInstance(getApplication());
                 if (DetailActivity.this.movieIsFav) {
                     db.favmovieDao().delete(mMovie);
+                    Log.v("favBtn", "favBtn clicked to delete");
                 } else {
                     db.favmovieDao().insert(mMovie);
+                    Log.v("favBtn", "favBtn clicked to add");
                 }
                 DetailActivity.this.movieIsFav = !DetailActivity.this.movieIsFav;
+                Log.v("favBtn", "favBtn is clicked");
             }
         });
         String message = movieIsFav ? "deleted" : "added";

@@ -81,10 +81,10 @@ public class Movie implements Parcelable {
     private Movie(Parcel in) {
         this.id = in.readInt();
         this.posterPath = in.readString();
-        this.title= in.readString();
-        this.releaseDate= in.readString();
-        this.rating= in.readInt();
-        this.overview= in.readString();
+        this.title = in.readString();
+        this.releaseDate = in.readString();
+        this.rating = in.readInt();
+        this.overview = in.readString();
     }
 
     public Movie() {
