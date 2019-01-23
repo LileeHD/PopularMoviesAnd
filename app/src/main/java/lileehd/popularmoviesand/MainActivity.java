@@ -63,26 +63,25 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
         setMainBinding();
         mRequestQueue = Volley.newRequestQueue(this);
         movieDbURLBuilder = new MovieDbUrlBuilder();
-//        requestMovies(movieDbURLBuilder.sortBy("popular").getUrl());
-//        setupViewModel();
+        requestMovies(movieDbURLBuilder.sortBy("popular").getUrl());
+        setupViewModel();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList("movies", new ArrayList<Movie>(mMovieAdapter.getItemCount()));
-        outState.putParcelable("view", recyclerViewState);
+        outState.putParcelable("movie", mMovie);
         Log.v("INSTANCE_STATE", "save");
     }
-//
-//    @Override
-//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-//        super.onRestoreInstanceState(savedInstanceState);
-//        Log.v("INSTANCE_STATE", "restore");
-//        mMovies = savedInstanceState.getParcelableArrayList("movies");
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        Log.v("INSTANCE_STATE", "restore");
+        mMovie = savedInstanceState.getParcelable("movie");
 //        mRecyclerView = savedInstanceState.getParcelable("view");
-//
-//    }
+
+    }
 
     private void setMainBinding() {
         mRecyclerView = mainBinding.recyclerView;
@@ -118,6 +117,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
         };
         JsonObjectRequest request = RequestHandler.getInstance().create(task, url);
         mRequestQueue.add(request);
+        Log.v("REQUEST MOVIE", "is requested");
     }
 
     //    Favorites
@@ -128,14 +128,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
             public void onChanged(List<Movie> favMovies) {
                 mMovieAdapter.setMovieList((ArrayList<Movie>) favMovies);
                 mRecyclerView.setAdapter(mMovieAdapter);
+                Log.v("ONCHANGE", "fav is changed");
             }
         });
+        Log.v("VIEWMODEL", "view model");
     }
-//    public void showFavMovies() {
-//    }
-//    public void showJsonMovies() {
-//        mRecyclerView.setAdapter(mMovieAdapter);
-//    }
 
     @Override
     public void onItemClick(int position) {
@@ -143,6 +140,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
         Movie movieClicked = mMovieAdapter.getMovieFrom(position);
         intent.putExtra(getString(R.string.movie_parsing_key), movieClicked);
         startActivity(intent);
+        Log.v("onItemClick", "intent");
     }
 
     //    Menu
@@ -166,17 +164,19 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
         switch (item.getItemId()) {
             case R.id.most_popular:
                 setTitle(R.string.most_popular);
-//                showJsonMovies();
+                Log.v("ISCLICKED", "popular");
                 return this.sortBy(getString(R.string.popular_key));
             case R.id.top_rated:
                 setTitle(R.string.top_rated);
-//                showJsonMovies();
+                Log.v("ISCLICKED", "top rated");
                 return this.sortBy(getString(R.string.top_rated_key));
             case R.id.favorites:
                 setTitle(R.string.favorites_db);
                 setupViewModel();
+                Log.v("ISCLICKED", "fav");
                 return true;
             default:
+                Log.v("ISCLICKED", "any choice");
                 return super.onOptionsItemSelected(item);
         }
     }
