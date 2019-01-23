@@ -29,7 +29,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.PosterViewHo
     }
 
     public void setMovieList(ArrayList<Movie> movies) {
-        this.mMovieList = movies;
+        mMovieList = movies;
+        notifyDataSetChanged();
     }
 
     public Movie getMovieFrom(int position) {

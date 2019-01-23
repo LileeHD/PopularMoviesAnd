@@ -20,7 +20,7 @@ public class MovieViewModel extends AndroidViewModel {
         super(application);
         AppDatabase mDb = AppDatabase.getInstance(this.getApplication());
         Log.v(RIVER, "Actively retrieving movies from database");
-        mFavMovies = mDb.favmovieDao().getFavMovieList();
+        mFavMovies = mDb.favmovieDao().LoadFavMovies();
     }
 
     public LiveData<List<Movie>> getAllFavs() {

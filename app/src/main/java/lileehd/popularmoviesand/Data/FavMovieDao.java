@@ -10,6 +10,8 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import lileehd.popularmoviesand.Models.Movie;
 
+import static android.icu.text.MessagePattern.ArgType.SELECT;
+
 @Dao
 public interface FavMovieDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -18,8 +20,11 @@ public interface FavMovieDao {
     @Query("SELECT COUNT(*) FROM movies WHERE id = :id")
     int movieCount(int id);
 
+    @Query("SELECT * FROM movies WHERE id = :id")
+    LiveData<Movie>loadByMovieId(int id);
+
     @Query("SELECT * FROM movies" )
-    LiveData<List<Movie>> getFavMovieList();
+    LiveData<List<Movie>> LoadFavMovies();
 
     @Delete
     void delete(Movie movie);

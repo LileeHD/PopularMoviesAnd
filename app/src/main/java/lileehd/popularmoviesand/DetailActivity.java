@@ -24,6 +24,8 @@ import java.util.ArrayList;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import lileehd.popularmoviesand.Adapters.ReviewAdapter;
@@ -33,6 +35,8 @@ import lileehd.popularmoviesand.Data.AppExecutors;
 import lileehd.popularmoviesand.Models.Movie;
 import lileehd.popularmoviesand.Models.Review;
 import lileehd.popularmoviesand.Models.Video;
+import lileehd.popularmoviesand.Utils.AddFavViewModel;
+import lileehd.popularmoviesand.Utils.AddMovieViewModelFactory;
 import lileehd.popularmoviesand.Utils.JsonTask;
 import lileehd.popularmoviesand.Utils.OnItemClickListener;
 import lileehd.popularmoviesand.Utils.RequestHandler;
@@ -60,11 +64,17 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
     private Button mFavBtn;
     private AppDatabase db;
     public boolean movieIsFav;
+    private static final int DEFAULT_MOVIE_ID = -1;
+    private int mMovieId = DEFAULT_MOVIE_ID;
+    public static final String INSTANCE_TASK_ID = "instanceTaskId";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         detailBinding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
+        if(savedInstanceState !=null&& savedInstanceState.containsKey(INSTANCE_TASK_ID)){
+            mMovieId = savedInstanceState.getInt(INSTANCE_TASK_ID, DEFAULT_MOVIE_ID);
+        }
 //Views
         posterThumbnail = detailBinding.moviePosterDetail;
         title = detailBinding.movieTitle;
@@ -75,38 +85,26 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
         review = detailBinding.reviewRecyclerView;
         mFavBtn = detailBinding.favBtn;
 
+        db = AppDatabase.getInstance(getApplication());
 //        Data from MDB api
         Intent intent = getIntent();
         mMovie = (Movie) intent.getParcelableExtra(getString(R.string.movie_parsing_key));
-        this.checkMovie(mMovie);
+
         setDetailBinding(mMovie);
         mRequestQueue = Volley.newRequestQueue(this);
         new RequestHandler();
-        JsonObjectRequest videoRequest = requestVideos(getString(R.string.movie_db_base_url) + mMovie.getId() + getString(R.string.api_label_and_key));
+        JsonObjectRequest videoRequest =
+                requestVideos(getString(R.string.movie_db_base_url)
+                        + mMovie.getId() + getString(R.string.api_label_and_key));
         mRequestQueue.add(videoRequest);
-
-//        Fav button
-        mFavBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onClickFavBtn(mMovie.getId());
-            }
-        });
-
+        favMovieViewModel(mMovieId);
     }
 
-    private void checkMovie(final Movie movie) {
-        AppExecutors.getInstance().diskIO().execute(new Runnable() {
-            @Override
-            public void run() {
-                db = AppDatabase.getInstance(getApplicationContext());
-                int count = db.favmovieDao().movieCount(movie.getId());
-                movieIsFav = count > 0;
-                DetailActivity.this.favBtn();
-            }
-        });
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt(INSTANCE_TASK_ID, mMovieId);
+        super.onSaveInstanceState(outState);
     }
-
 
     private void setDetailBinding(Movie movie) {
 // movie detail
@@ -205,11 +203,10 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
     }
 
     @Override
-    public void onClickFavBtn(int position) {
+    public void onClickFavBtn() {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                db = AppDatabase.getInstance(getApplication());
                 if (DetailActivity.this.movieIsFav) {
                     db.favmovieDao().delete(mMovie);
                     Log.v("favBtn", "favBtn clicked to delete");
@@ -226,4 +223,23 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
         this.favBtn();
     }
 
+    public void favMovieViewModel(int position) {
+        if(mMovieId == DEFAULT_MOVIE_ID){
+            AddMovieViewModelFactory factory = new AddMovieViewModelFactory(db, mMovieId);
+            final AddFavViewModel viewModel = ViewModelProviders.of(this, factory).get(AddFavViewModel.class);
+            viewModel.getMovie().observe(this, new Observer<Movie>() {
+                @Override
+                public void onChanged(Movie movie) {
+                    viewModel.getMovie().removeObserver(this);
+                    mFavBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onClickFavBtn();
+                        }
+                    });
+                }
+            });
+        }
 }
+}
+
