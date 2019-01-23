@@ -24,7 +24,6 @@ import java.util.ArrayList;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import lileehd.popularmoviesand.Adapters.ReviewAdapter;
@@ -35,7 +34,6 @@ import lileehd.popularmoviesand.Models.Movie;
 import lileehd.popularmoviesand.Models.Review;
 import lileehd.popularmoviesand.Models.Video;
 import lileehd.popularmoviesand.Utils.JsonTask;
-import lileehd.popularmoviesand.Utils.MovieViewModel;
 import lileehd.popularmoviesand.Utils.OnItemClickListener;
 import lileehd.popularmoviesand.Utils.RequestHandler;
 import lileehd.popularmoviesand.databinding.ActivityDetailBinding;
@@ -79,7 +77,7 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
 
 //        Data from MDB
         Intent intent = getIntent();
-        mMovie = (Movie) intent.getSerializableExtra(getString(R.string.movie_parsing_key));
+        mMovie = (Movie) intent.getParcelableExtra(getString(R.string.movie_parsing_key));
         this.checkMovie(mMovie);
         setDetailBinding(mMovie);
         mRequestQueue = Volley.newRequestQueue(this);
@@ -91,7 +89,7 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
         mFavBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onClickFavBtn();
+                onClickFavBtn(mMovie.getId());
             }
         });
 
@@ -207,7 +205,7 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
     }
 
     @Override
-    public void onClickFavBtn() {
+    public void onClickFavBtn(int position) {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
@@ -220,7 +218,6 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
                 DetailActivity.this.movieIsFav = !DetailActivity.this.movieIsFav;
             }
         });
-
         String message = movieIsFav ? "deleted" : "added";
         Toast.makeText(DetailActivity.this, message, Toast.LENGTH_LONG).show();
         this.favBtn();

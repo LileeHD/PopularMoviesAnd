@@ -4,6 +4,6 @@ public interface OnItemClickListener {
 
     void onVideoClick(int position);
     void onReviewClick(int position);
-    void onClickFavBtn();
+    void onClickFavBtn(int position);
 
 }

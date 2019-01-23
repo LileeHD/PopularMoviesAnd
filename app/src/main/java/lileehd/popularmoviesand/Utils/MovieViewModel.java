@@ -8,7 +8,6 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import lileehd.popularmoviesand.Data.AppDatabase;
 import lileehd.popularmoviesand.Models.Movie;
 
@@ -25,10 +24,6 @@ public class MovieViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<Movie>> getAllFavs() {
-//        if (mFavMovies == null) {
-//            mFavMovies = new MutableLiveData<>();
-//            getAllFavs();
-//        }
         return mFavMovies;
     }
 
