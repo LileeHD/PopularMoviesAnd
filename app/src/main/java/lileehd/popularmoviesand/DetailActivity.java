@@ -64,17 +64,12 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
     private Button mFavBtn;
     private AppDatabase db;
     public boolean movieIsFav;
-    private static final int DEFAULT_MOVIE_ID = -1;
-    private int mMovieId = DEFAULT_MOVIE_ID;
-    public static final String INSTANCE_TASK_ID = "instanceTaskId";
+    private  int mMovieId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         detailBinding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
-        if(savedInstanceState !=null&& savedInstanceState.containsKey(INSTANCE_TASK_ID)){
-            mMovieId = savedInstanceState.getInt(INSTANCE_TASK_ID, DEFAULT_MOVIE_ID);
-        }
 //Views
         posterThumbnail = detailBinding.moviePosterDetail;
         title = detailBinding.movieTitle;
@@ -85,26 +80,37 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
         review = detailBinding.reviewRecyclerView;
         mFavBtn = detailBinding.favBtn;
 
-        db = AppDatabase.getInstance(getApplication());
-//        Data from MDB api
+//        Data from MDB
         Intent intent = getIntent();
         mMovie = (Movie) intent.getParcelableExtra(getString(R.string.movie_parsing_key));
-
+        this.checkMovie(mMovie);
         setDetailBinding(mMovie);
         mRequestQueue = Volley.newRequestQueue(this);
         new RequestHandler();
-        JsonObjectRequest videoRequest =
-                requestVideos(getString(R.string.movie_db_base_url)
-                        + mMovie.getId() + getString(R.string.api_label_and_key));
+        JsonObjectRequest videoRequest = requestVideos(getString(R.string.movie_db_base_url) + mMovie.getId() + getString(R.string.api_label_and_key));
         mRequestQueue.add(videoRequest);
-        favMovieViewModel(mMovieId);
+//        Fav button
+        mFavBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickFavBtn(mMovie.getId());
+            }
+        });
+
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putInt(INSTANCE_TASK_ID, mMovieId);
-        super.onSaveInstanceState(outState);
+    private void checkMovie(final Movie movie) {
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                db = AppDatabase.getInstance(getApplicationContext());
+                int count = db.favmovieDao().movieCount(movie.getId());
+                movieIsFav = count > 0;
+                DetailActivity.this.favBtn();
+            }
+        });
     }
+
 
     private void setDetailBinding(Movie movie) {
 // movie detail
@@ -203,19 +209,17 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
     }
 
     @Override
-    public void onClickFavBtn() {
+    public void onClickFavBtn(int position) {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
+                db = AppDatabase.getInstance(getApplication());
                 if (DetailActivity.this.movieIsFav) {
                     db.favmovieDao().delete(mMovie);
-                    Log.v("favBtn", "favBtn clicked to delete");
                 } else {
                     db.favmovieDao().insert(mMovie);
-                    Log.v("favBtn", "favBtn clicked to add");
                 }
                 DetailActivity.this.movieIsFav = !DetailActivity.this.movieIsFav;
-                Log.v("favBtn", "favBtn is clicked");
             }
         });
         String message = movieIsFav ? "deleted" : "added";
@@ -224,22 +228,13 @@ public class DetailActivity extends AppCompatActivity implements OnItemClickList
     }
 
     public void favMovieViewModel(int position) {
-        if(mMovieId == DEFAULT_MOVIE_ID){
-            AddMovieViewModelFactory factory = new AddMovieViewModelFactory(db, mMovieId);
-            final AddFavViewModel viewModel = ViewModelProviders.of(this, factory).get(AddFavViewModel.class);
-            viewModel.getMovie().observe(this, new Observer<Movie>() {
-                @Override
-                public void onChanged(Movie movie) {
-                    viewModel.getMovie().removeObserver(this);
-                    mFavBtn.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            onClickFavBtn();
-                        }
-                    });
-                }
-            });
-        }
+        AddMovieViewModelFactory factory = new AddMovieViewModelFactory(db, mMovieId);
+        final AddFavViewModel viewModel = ViewModelProviders.of(this, factory).get(AddFavViewModel.class);
+        viewModel.getMovie().observe(this, new Observer<Movie>() {
+            @Override
+            public void onChanged(Movie movie) {
+                viewModel.getMovie().removeObserver(this);
+            }
+        });
+    }
 }
-}
-

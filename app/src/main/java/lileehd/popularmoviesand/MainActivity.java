@@ -3,6 +3,7 @@ package lileehd.popularmoviesand;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -35,19 +36,13 @@ import lileehd.popularmoviesand.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity implements MovieAdapter.OnItemClickListener {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
-    public static final String SAVE_ALL_MOVIES_LIST = "ALL_MOVIES_LIST";
-    public static final String SAVE_MOVIE_FILTER_SORT = "MOVIE_FILTER_SORT";
-    private static final String BUNDLE_RECYCLER_LAYOUT = "recycler_layout";
-
     private RequestQueue mRequestQueue;
-    private ArrayList<Movie> mMovies =new ArrayList<>();
-    private List<Movie> mFavMovies;
+    private ArrayList<Movie> mMovies = new ArrayList<>();
     private MovieAdapter mMovieAdapter;
     ActivityMainBinding mainBinding;
     protected MovieDbUrlBuilder movieDbURLBuilder;
     private RecyclerView mRecyclerView;
-    private int currentList =0;
+    private Movie movie;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,40 +53,40 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
 
         mRecyclerView = mainBinding.recyclerView;
         mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setAdapter(mMovieAdapter);
         if (MainActivity.this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             mRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
         } else {
             mRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 4));
         }
-        Log.v("setMainBinding", "is displayed");
         new RequestHandler();
         mRequestQueue = Volley.newRequestQueue(this);
         movieDbURLBuilder = new MovieDbUrlBuilder();
 
         if (savedInstanceState != null) {
-            mMovies = savedInstanceState.getParcelableArrayList("SAVE_INSTANCE");
+            mMovies = savedInstanceState.getParcelableArrayList("movies");
+//            movie = savedInstanceState.getParcelable("movie");
             mMovieAdapter.setMovieList(mMovies);
             mMovieAdapter.notifyDataSetChanged();
         } else {
             requestMovies(movieDbURLBuilder.sortBy("popular").getUrl());
         }
-//        requestMovies(movieDbURLBuilder.sortBy("popular").getUrl());
+
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList("movies", mMovies);
+//        outState.putParcelable("movie", movie);
         Log.v("INSTANCE_STATE", "save");
         super.onSaveInstanceState(outState);
     }
 
-//    @Override
-//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-//        super.onRestoreInstanceState(savedInstanceState);
-//        Log.v("INSTANCE_STATE", "restore");
-//        mMovies = savedInstanceState.getParcelableArrayList("movies");
-//    }
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        Log.v("INSTANCE_STATE", "restore");
+        movie = savedInstanceState.getParcelable("movie");
+    }
 
     public void requestMovies(String url) {
         JsonTask task = new JsonTask() {
@@ -123,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
         viewModel.getAllFavs().observe(this, new Observer<List<Movie>>() {
             @Override
             public void onChanged(List<Movie> favMovies) {
+//                mFavMovies = favMovies;
                 mMovieAdapter.setMovieList((ArrayList<Movie>) favMovies);
                 mRecyclerView.setAdapter(mMovieAdapter);
                 Log.v("ONCHANGE", "fav is changed");
@@ -150,14 +146,14 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
 
     public boolean sortBy(String sort) {
         String url = movieDbURLBuilder.sortBy(sort).getUrl();
+        requestMovies(url);
         Log.v("SORTBY", sort);
         Log.v("SORTBY", url);
-        requestMovies(url);
         return true;
     }
 
-    public boolean isCurrentList(){
-        String currentList ="movies";
+    public boolean isCurrentList() {
+        String currentList = "movies";
         return false;
     }
 
@@ -165,18 +161,17 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.OnIt
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.most_popular:
-                setTitle(R.string.most_popular);
+//                setTitle(R.string.most_popular);
                 Log.v("ISCLICKED", "popular");
                 return this.sortBy(getString(R.string.popular_key));
             case R.id.top_rated:
-                setTitle(R.string.top_rated);
+//                setTitle(R.string.top_rated);
                 Log.v("ISCLICKED", "top rated");
                 return this.sortBy(getString(R.string.top_rated_key));
             case R.id.favorites:
-                setTitle(R.string.favorites_db);
-                favViewModel();
+//                setTitle(R.string.favorites_db);
                 Log.v("ISCLICKED", "fav");
-                return true;
+                favViewModel();
             default:
                 Log.v("ISCLICKED", "any choice");
                 return super.onOptionsItemSelected(item);
